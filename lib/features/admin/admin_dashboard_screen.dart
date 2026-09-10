@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
-import 'package:al_anwar_institute/core/routing/role_scaffold.dart';
-import 'package:al_anwar_institute/core/widgets/common_cards.dart';
-import 'package:al_anwar_institute/core/widgets/state_widgets.dart';
-import 'package:al_anwar_institute/features/admin/students/manage_students_screen.dart';
-import 'package:al_anwar_institute/features/admin/teachers/manage_teachers_screen.dart';
-import 'package:al_anwar_institute/features/admin/classes/manage_classes_screen.dart';
-import 'package:al_anwar_institute/features/admin/subjects/manage_subjects_screen.dart';
-import 'package:al_anwar_institute/features/admin/schedule/manage_schedule_screen.dart';
-import 'package:al_anwar_institute/features/admin/payments/manage_payments_screen.dart';
-import 'package:al_anwar_institute/features/admin/reports/reports_screen.dart';
-import 'package:al_anwar_institute/features/admin/announcements/manage_announcements_screen.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/core/routing/role_scaffold.dart';
+import 'package:alanwar_institute/core/widgets/common_cards.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
+import 'package:alanwar_institute/features/admin/students/manage_students_screen.dart';
+import 'package:alanwar_institute/features/admin/teachers/manage_teachers_screen.dart';
+import 'package:alanwar_institute/features/admin/classes/manage_classes_screen.dart';
+import 'package:alanwar_institute/features/admin/subjects/manage_subjects_screen.dart';
+import 'package:alanwar_institute/features/admin/schedule/manage_schedule_screen.dart';
+import 'package:alanwar_institute/features/admin/payments/manage_payments_screen.dart';
+import 'package:alanwar_institute/features/admin/reports/reports_screen.dart';
+import 'package:alanwar_institute/features/admin/announcements/manage_announcements_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});

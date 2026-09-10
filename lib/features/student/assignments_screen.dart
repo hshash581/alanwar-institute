@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
-import 'package:al_anwar_institute/core/widgets/state_widgets.dart';
-import 'package:al_anwar_institute/models/records_model.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
+import 'package:alanwar_institute/models/records_model.dart';
 
 class AssignmentsScreen extends StatelessWidget {
   const AssignmentsScreen({super.key});

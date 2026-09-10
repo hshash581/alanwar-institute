@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:al_anwar_institute/models/user_model.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/models/user_model.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;

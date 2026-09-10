@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/core/widgets/common_cards.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/core/widgets/common_cards.dart';
 
 class ProfileScreen extends ConsumerWidget {
   final dynamic user;

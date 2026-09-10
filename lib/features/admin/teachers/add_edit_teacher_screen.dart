@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/models/teacher_model.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/models/teacher_model.dart';
 
 class AddEditTeacherScreen extends ConsumerStatefulWidget {
   final TeacherModel? teacher;

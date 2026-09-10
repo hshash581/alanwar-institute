@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:al_anwar_institute/models/user_model.dart';
-import 'package:al_anwar_institute/models/class_subject_schedule_model.dart';
-import 'package:al_anwar_institute/models/teacher_model.dart';
-import 'package:al_anwar_institute/models/student_model.dart';
-import 'package:al_anwar_institute/core/services/auth_service.dart';
-import 'package:al_anwar_institute/core/services/admin_repository.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/models/user_model.dart';
+import 'package:alanwar_institute/models/class_subject_schedule_model.dart';
+import 'package:alanwar_institute/models/teacher_model.dart';
+import 'package:alanwar_institute/models/student_model.dart';
+import 'package:alanwar_institute/core/services/auth_service.dart';
+import 'package:alanwar_institute/core/services/admin_repository.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();

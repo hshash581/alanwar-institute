@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/core/routing/role_scaffold.dart';
-import 'package:al_anwar_institute/core/widgets/state_widgets.dart';
-import 'package:al_anwar_institute/core/widgets/common_cards.dart';
-import 'package:al_anwar_institute/features/student/schedule_screen.dart';
-import 'package:al_anwar_institute/features/student/attendance_screen.dart';
-import 'package:al_anwar_institute/features/student/payments_screen.dart';
-import 'package:al_anwar_institute/features/student/subjects_screen.dart';
-import 'package:al_anwar_institute/features/student/assignments_screen.dart';
-import 'package:al_anwar_institute/features/student/announcements_screen.dart';
-import 'package:al_anwar_institute/features/student/profile_screen.dart';
-import 'package:al_anwar_institute/models/student_model.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/core/routing/role_scaffold.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
+import 'package:alanwar_institute/core/widgets/common_cards.dart';
+import 'package:alanwar_institute/features/student/schedule_screen.dart';
+import 'package:alanwar_institute/features/student/attendance_screen.dart';
+import 'package:alanwar_institute/features/student/payments_screen.dart';
+import 'package:alanwar_institute/features/student/subjects_screen.dart';
+import 'package:alanwar_institute/features/student/assignments_screen.dart';
+import 'package:alanwar_institute/features/student/announcements_screen.dart';
+import 'package:alanwar_institute/features/student/profile_screen.dart';
+import 'package:alanwar_institute/models/student_model.dart';
 
 class StudentHomeScreen extends ConsumerStatefulWidget {
   const StudentHomeScreen({super.key});

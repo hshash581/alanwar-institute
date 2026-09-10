@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/core/services/firebase_refs.dart';
-import 'package:al_anwar_institute/core/constants/app_colors.dart';
-import 'package:al_anwar_institute/models/class_subject_schedule_model.dart';
-import 'package:al_anwar_institute/core/widgets/state_widgets.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/models/class_subject_schedule_model.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
 
 class AddEditStudentScreen extends ConsumerStatefulWidget {
   final String? studentId;

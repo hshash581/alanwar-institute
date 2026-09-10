@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:al_anwar_institute/core/services/providers.dart';
-import 'package:al_anwar_institute/features/auth/login_screen.dart';
-import 'package:al_anwar_institute/features/admin/admin_dashboard_screen.dart';
-import 'package:al_anwar_institute/features/teacher/teacher_home_screen.dart';
-import 'package:al_anwar_institute/features/student/student_home_screen.dart';
-import 'package:al_anwar_institute/core/widgets/state_widgets.dart';
+import 'package:alanwar_institute/core/services/providers.dart';
+import 'package:alanwar_institute/models/user_model.dart';
+import 'package:alanwar_institute/features/auth/login_screen.dart';
+import 'package:alanwar_institute/features/admin/admin_dashboard_screen.dart';
+import 'package:alanwar_institute/features/teacher/teacher_home_screen.dart';
+import 'package:alanwar_institute/features/student/student_home_screen.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
