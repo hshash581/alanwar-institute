@@ -199,7 +199,6 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                                 });
                               },
                               selectedColor: AppColors.primary.withOpacity(0.2),
-                              checkColor: AppColors.primary,
                             );
                           }).toList(),
                         ),
