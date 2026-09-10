@@ -7,6 +7,8 @@ import 'package:alanwar_institute/features/admin/admin_dashboard_screen.dart';
 import 'package:alanwar_institute/features/teacher/teacher_home_screen.dart';
 import 'package:alanwar_institute/features/student/student_home_screen.dart';
 import 'package:alanwar_institute/core/constants/app_colors.dart';
+import 'package:alanwar_institute/core/services/firebase_refs.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -24,10 +26,7 @@ class AuthGate extends ConsumerWidget {
         return currentUser.when(
           data: (appUser) {
             if (appUser == null) {
-              return const _ErrorView(
-                title: 'خطأ في تحميل البيانات',
-                message: 'لم يتم العثور على بيانات المستخدم',
-              );
+              return _UserNotFoundView(user: user);
             }
 
             if (!appUser.isActive) {
@@ -42,7 +41,7 @@ class AuthGate extends ConsumerWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.errorBg,
                               shape: BoxShape.circle,
                             ),
@@ -99,18 +98,110 @@ class AuthGate extends ConsumerWidget {
             }
           },
           loading: () => const _LoadingView(),
-          error: (e, _) => _ErrorView(
-            title: 'خطأ في الاتصال',
-            message: 'تعذر الاتصال بالخادم، يرجى المحاولة مرة أخرى',
-            onRetry: () => ref.invalidate(currentAppUserProvider),
-          ),
+          error: (e, _) {
+            return _ErrorRetryView(
+              message: 'تعذر تحميل بيانات المستخدم',
+              onRetry: () => ref.invalidate(currentAppUserProvider),
+              onLogout: () => ref.read(authServiceProvider).signOut(),
+            );
+          },
         );
       },
       loading: () => const _LoadingView(),
-      error: (e, _) => _ErrorView(
-        title: 'خطأ في المصادقة',
-        message: 'تعذر الاتصال بالخادم، يرجى المحاولة مرة أخرى',
-        onRetry: () => ref.invalidate(firebaseAuthStateProvider),
+      error: (e, _) {
+        return _ErrorRetryView(
+          message: 'تعذر الاتصال بالخادم',
+          onRetry: () => ref.invalidate(firebaseAuthStateProvider),
+          onLogout: () => ref.read(authServiceProvider).signOut(),
+        );
+      },
+    );
+  }
+}
+
+class _UserNotFoundView extends ConsumerWidget {
+  final User user;
+  const _UserNotFoundView({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: AppColors.warningBg,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.person_off_rounded,
+                    size: 64,
+                    color: AppColors.warning,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'لم يتم العثور على بيانات المستخدم',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'الحساب موجود في نظام المصادقة لكن لا توجد بيانات مسجلة في النظام.\nيرجى التواصل مع المدير لإنشاء الحساب.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'البريد: ${user.email ?? "غير محدد"}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.blue,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await ref.read(authServiceProvider).signOut();
+                    },
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('تسجيل الخروج'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -142,15 +233,15 @@ class _LoadingView extends StatelessWidget {
   }
 }
 
-class _ErrorView extends StatelessWidget {
-  final String title;
+class _ErrorRetryView extends StatelessWidget {
   final String message;
-  final VoidCallback? onRetry;
+  final VoidCallback onRetry;
+  final VoidCallback onLogout;
 
-  const _ErrorView({
-    required this.title,
+  const _ErrorRetryView({
     required this.message,
-    this.onRetry,
+    required this.onRetry,
+    required this.onLogout,
   });
 
   @override
@@ -177,9 +268,9 @@ class _ErrorView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  title,
-                  style: const TextStyle(
+                const Text(
+                  'حدث خطأ',
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -194,22 +285,31 @@ class _ErrorView extends StatelessWidget {
                     height: 1.5,
                   ),
                 ),
-                if (onRetry != null) ...[
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh_rounded),
                     label: const Text('إعادة المحاولة'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: onLogout,
+                  child: const Text(
+                    'تسجيل الخروج',
+                    style: TextStyle(color: AppColors.error),
+                  ),
+                ),
               ],
             ),
           ),
