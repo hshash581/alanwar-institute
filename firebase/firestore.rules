@@ -27,7 +27,7 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
       allow create: if true;
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
@@ -35,7 +35,8 @@ service cloud.firestore {
 
     match /usernames/{username} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow create: if true;
+      allow write: if isAdmin() || request.auth == null;
     }
 
     match /students/{studentId} {
@@ -105,7 +106,7 @@ service cloud.firestore {
     }
 
     match /counters/{counterId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdmin() || request.auth == null;
     }
   }
 }

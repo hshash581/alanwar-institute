@@ -16,6 +16,7 @@ class ManageSubjectsScreen extends ConsumerStatefulWidget {
 
 class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
   String? _filterClassLevel;
+  String? _filterBranch;
 
   @override
   Widget build(BuildContext context) {
@@ -34,77 +35,139 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: FilterChip(
-                      label: const Text('الكل'),
-                      selected: _filterClassLevel == null,
-                      onSelected: (selected) {
-                        setState(() => _filterClassLevel = null);
-                      },
-                      selectedColor: AppColors.primary.withOpacity(0.2),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilterChip(
+                          label: const Text('الكل'),
+                          selected: _filterClassLevel == null,
+                          onSelected: (selected) {
+                            setState(() {
+                              _filterClassLevel = null;
+                              _filterBranch = null;
+                            });
+                          },
+                          selectedColor: AppColors.primary.withOpacity(0.2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilterChip(
+                          label: const Text('تاسع'),
+                          selected: _filterClassLevel == 'تاسع',
+                          onSelected: (selected) {
+                            setState(() {
+                              _filterClassLevel = selected ? 'تاسع' : null;
+                              _filterBranch = null;
+                            });
+                          },
+                          selectedColor: AppColors.primary.withOpacity(0.2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilterChip(
+                          label: const Text('بكالوريا'),
+                          selected: _filterClassLevel == 'بكالوريا',
+                          onSelected: (selected) {
+                            setState(() {
+                              _filterClassLevel = selected ? 'بكالوريا' : null;
+                              _filterBranch = null;
+                            });
+                          },
+                          selectedColor: AppColors.primary.withOpacity(0.2),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilterChip(
-                      label: const Text('تاسع'),
-                      selected: _filterClassLevel == 'تاسع',
-                      onSelected: (selected) {
-                        setState(() => _filterClassLevel = selected ? 'تاسع' : null);
-                      },
-                      selectedColor: AppColors.primary.withOpacity(0.2),
+                  if (_filterClassLevel == 'بكالوريا') ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilterChip(
+                            label: const Text('الكل'),
+                            selected: _filterBranch == null,
+                            onSelected: (selected) {
+                              setState(() => _filterBranch = null);
+                            },
+                            selectedColor: Colors.blue.withOpacity(0.2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilterChip(
+                            label: const Text('علمي'),
+                            selected: _filterBranch == 'علمي',
+                            onSelected: (selected) {
+                              setState(() => _filterBranch = selected ? 'علمي' : null);
+                            },
+                            selectedColor: Colors.blue.withOpacity(0.2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: FilterChip(
+                            label: const Text('أدبي'),
+                            selected: _filterBranch == 'أدبي',
+                            onSelected: (selected) {
+                              setState(() => _filterBranch = selected ? 'أدبي' : null);
+                            },
+                            selectedColor: Colors.blue.withOpacity(0.2),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilterChip(
-                      label: const Text('بكالوريا'),
-                      selected: _filterClassLevel == 'بكالوريا',
-                      onSelected: (selected) {
-                        setState(() => _filterClassLevel = selected ? 'بكالوريا' : null);
-                      },
-                      selectedColor: AppColors.primary.withOpacity(0.2),
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
             Expanded(
               child: StreamBuilder<List<SubjectModel>>(
                 stream: ref.watch(subjectsStreamProvider).whenData((data) => Stream.value(data)).value,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                builder: (context, subjectsSnapshot) {
+                  if (subjectsSnapshot.connectionState == ConnectionState.waiting) {
                     return const LoadingView();
                   }
 
-                  if (snapshot.hasError) {
+                  if (subjectsSnapshot.hasError) {
                     return ErrorView(
                       message: 'خطأ في تحميل البيانات',
                       onRetry: () => setState(() {}),
                     );
                   }
 
-                  var subjects = snapshot.data ?? [];
+                  var subjects = subjectsSnapshot.data ?? [];
 
                   if (_filterClassLevel != null) {
                     subjects = subjects.where((s) => s.classLevel == _filterClassLevel).toList();
                   }
 
-                  if (subjects.isEmpty) {
-                    return const EmptyView(
-                      message: 'لا يوجد مواد',
-                      icon: Icons.book,
-                    );
-                  }
+                  return StreamBuilder<List<TeacherModel>>(
+                    stream: ref.watch(teachersStreamProvider).whenData((data) => Stream.value(data)).value,
+                    builder: (context, teachersSnapshot) {
+                      final teachers = teachersSnapshot.data ?? [];
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: subjects.length,
-                    itemBuilder: (context, index) {
-                      final subject = subjects[index];
-                      return _buildSubjectCard(subject);
+                      if (subjects.isEmpty) {
+                        return const EmptyView(
+                          message: 'لا يوجد مواد',
+                          icon: Icons.book,
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: subjects.length,
+                        itemBuilder: (context, index) {
+                          final subject = subjects[index];
+                          final teacher = teachers.isNotEmpty
+                              ? teachers.where((t) => t.uid == subject.teacherId).firstOrNull
+                              : null;
+                          return _buildSubjectCard(subject, teacher);
+                        },
+                      );
                     },
                   );
                 },
@@ -121,7 +184,7 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
     );
   }
 
-  Widget _buildSubjectCard(SubjectModel subject) {
+  Widget _buildSubjectCard(SubjectModel subject, TeacherModel? teacher) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -144,10 +207,11 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
               ),
             ),
             Text(
-              subject.teacherId.isNotEmpty ? 'معلم محدد' : 'بدون معلم',
+              teacher != null ? 'المعلم: ${teacher.fullName}' : 'بدون معلم',
               style: TextStyle(
-                color: subject.teacherId.isNotEmpty ? Colors.green : Colors.red,
+                color: teacher != null ? Colors.green : Colors.red,
                 fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

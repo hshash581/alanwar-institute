@@ -17,6 +17,7 @@ import 'package:alanwar_institute/features/admin/reports/reports_screen.dart';
 import 'package:alanwar_institute/features/admin/announcements/manage_announcements_screen.dart';
 import 'package:alanwar_institute/features/admin/classes/manage_classes_screen.dart';
 import 'package:alanwar_institute/features/admin/subjects/manage_subjects_screen.dart';
+import 'package:alanwar_institute/features/admin/admin_management_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -884,6 +885,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             icon: Icons.person_outline,
             title: 'الملف الشخصي',
             onTap: () {},
+          ),
+          _buildSettingsTile(
+            icon: Icons.admin_panel_settings,
+            title: 'إدارة المديرين',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ManageAdminsScreen()),
+              );
+            },
           ),
           _buildSettingsTile(
             icon: Icons.notifications_outlined,

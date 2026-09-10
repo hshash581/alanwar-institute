@@ -20,6 +20,7 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _addressController = TextEditingController();
   final _guardianNameController = TextEditingController();
   final _guardianPhoneController = TextEditingController();
@@ -40,6 +41,7 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _usernameController.dispose();
     _addressController.dispose();
     _guardianNameController.dispose();
     _guardianPhoneController.dispose();
@@ -107,6 +109,21 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                     }
                     if (!value.contains('@')) {
                       return 'البريد الإلكتروني غير صالح';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildTextField(
+                  controller: _usernameController,
+                  label: 'اسم المستخدم (يوزر نيم)',
+                  icon: Icons.account_circle,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'الرجاء إدخال اسم المستخدم';
+                    }
+                    if (value.length < 3) {
+                      return 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
                     }
                     return null;
                   },
@@ -188,7 +205,7 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                       items: filteredStreams.map((stream) {
                         return DropdownMenuItem(
                           value: stream.id,
-                          child: Text(stream.name),
+                          child: Text('${stream.name} (${stream.type})'),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -377,44 +394,98 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
         subjectIds: _selectedSubjectIds,
         installmentValue: double.tryParse(_installmentController.text) ?? 0,
         notes: _notesController.text.trim(),
+        customUsername: _usernameController.text.trim(),
         createdBy: currentUser.uid,
       );
 
       if (mounted) {
         showDialog(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('تم الإنشاء بنجاح'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('تم إنشاء حساب الطالب بنجاح'),
-                const SizedBox(height: 16),
-                Text('رقم الطالب: ${credentials.displayName.split(' - ').first}'),
-                const SizedBox(height: 8),
-                Text('البريد الإلكتروني: ${credentials.email}'),
-                const SizedBox(height: 8),
-                Text('كلمة المرور: ${credentials.password}'),
-                const SizedBox(height: 16),
-                const Text(
-                  'يرجى حفظ هذه البيانات في مكان آمن',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
+          builder: (context) => Directionality(
+            textDirection: TextDirection.rtl,
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle, color: Colors.green, size: 28),
                   ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'تم الإنشاء بنجاح',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              content: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'تم إنشاء حساب الطالب بنجاح',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCredentialRow('اسم المستخدم:', _usernameController.text.trim()),
+                    const SizedBox(height: 8),
+                    _buildCredentialRow('رقم الطالب:', credentials.displayName.split(' - ').first),
+                    const SizedBox(height: 8),
+                    _buildCredentialRow('البريد الإلكتروني:', credentials.email),
+                    const SizedBox(height: 8),
+                    _buildCredentialRow('كلمة المرور:', credentials.password, isPassword: true),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'يرجى حفظ هذه البيانات في مكان آمن ومشاركتها مع الطالب',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('حسناً'),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                child: const Text('حسناً'),
-              ),
-            ],
           ),
         );
       }
@@ -430,5 +501,40 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildCredentialRow(String label, String value, {bool isPassword = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            fontSize: 13,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPassword ? Colors.red.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isPassword ? Colors.red : Colors.blue,
+                fontSize: 14,
+              ),
+              textDirection: TextDirection.ltr,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

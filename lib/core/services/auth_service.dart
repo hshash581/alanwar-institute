@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:alanwar_institute/models/user_model.dart';
@@ -65,23 +66,31 @@ class AuthService {
     String? username,
     required String createdBy,
   }) async {
+    String? newUid;
+    FirebaseApp? secondaryApp;
+
     try {
-      final secondaryApp = await Firebase.initializeApp(
+      // Step 1: Create user via secondary app (only for Auth)
+      secondaryApp = await Firebase.initializeApp(
         name: 'admin-secondary-${DateTime.now().millisecondsSinceEpoch}',
         options: Firebase.app().options,
       );
 
       final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
-
       final cred = await secondaryAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      newUid = cred.user!.uid;
       await cred.user!.updateDisplayName(displayName);
 
+      // Clean up secondary app auth
+      await secondaryAuth.signOut();
+
+      // Step 2: Write Firestore documents using PRIMARY app (has admin auth)
       final appUser = AppUser(
-        uid: cred.user!.uid,
+        uid: newUid,
         displayName: displayName,
         email: email,
         username: username ?? email.split('@').first,
@@ -91,34 +100,41 @@ class AuthService {
         createdBy: createdBy,
       );
 
-      await FirestoreRefs.users.doc(cred.user!.uid).set(appUser.toMap());
+      await FirestoreRefs.users.doc(newUid).set(appUser.toMap());
 
       final resolvedUsername = username ?? email.split('@').first;
       await FirestoreRefs.usernames.doc(resolvedUsername.toLowerCase()).set({
         'email': email,
-        'uid': cred.user!.uid,
+        'uid': newUid,
         'username': resolvedUsername,
       });
 
-      await secondaryApp.delete();
-
       return GeneratedCredentials(
-        uid: cred.user!.uid,
+        uid: newUid,
         email: email,
         password: password,
         displayName: displayName,
       );
     } on FirebaseAuthException catch (e) {
       throw Exception(_mapFirebaseError(e));
+    } catch (e) {
+      rethrow;
+    } finally {
+      // Always clean up secondary app
+      try {
+        if (secondaryApp != null) {
+          await secondaryApp.delete();
+        }
+      } catch (_) {}
     }
   }
 
   String generatePassword() {
+    final random = Random.secure();
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*';
-    final random = DateTime.now().millisecondsSinceEpoch;
     String password = '';
     for (int i = 0; i < 12; i++) {
-      password += chars[(random + i * 7) % chars.length];
+      password += chars[random.nextInt(chars.length)];
     }
     return password;
   }

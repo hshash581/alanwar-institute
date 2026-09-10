@@ -23,11 +23,14 @@ class AdminRepository {
     List<String> subjectIds = const [],
     double installmentValue = 0,
     String notes = '',
+    String? customUsername,
     required String createdBy,
   }) async {
     try {
       final studentNumber = await FirestoreRefs.nextSequence('STU');
-      final username = studentNumber.toLowerCase();
+      final username = customUsername?.isNotEmpty == true
+          ? customUsername!
+          : studentNumber.toLowerCase();
       final password = _authService.generatePassword();
 
       final credentials = await _authService.createUserByAdmin(
@@ -79,11 +82,14 @@ class AdminRepository {
     List<String> subjectIds = const [],
     List<String> classLevels = const [],
     String notes = '',
+    String? customUsername,
     required String createdBy,
   }) async {
     try {
       final teacherNumber = await FirestoreRefs.nextSequence('TCH');
-      final username = teacherNumber.toLowerCase();
+      final username = customUsername?.isNotEmpty == true
+          ? customUsername!
+          : teacherNumber.toLowerCase();
       final password = _authService.generatePassword();
 
       final credentials = await _authService.createUserByAdmin(
@@ -135,11 +141,14 @@ class AdminRepository {
   Future<GeneratedCredentials> createAdmin({
     required String fullName,
     required String email,
+    String? customUsername,
     required String createdBy,
   }) async {
     try {
       final password = _authService.generatePassword();
-      final username = email.split('@').first;
+      final username = customUsername?.isNotEmpty == true
+          ? customUsername!
+          : email.split('@').first;
 
       final credentials = await _authService.createUserByAdmin(
         email: email,

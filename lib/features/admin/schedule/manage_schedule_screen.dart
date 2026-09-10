@@ -136,12 +136,24 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: schedules.length,
-                    itemBuilder: (context, index) {
-                      final schedule = schedules[index];
-                      return _buildScheduleCard(schedule);
+                  return StreamBuilder<List<SubjectModel>>(
+                    stream: ref.watch(subjectsStreamProvider).whenData((data) => Stream.value(data)).value,
+                    builder: (context, subjectsSnapshot) {
+                      final subjects = subjectsSnapshot.data ?? [];
+                      return StreamBuilder<List<TeacherModel>>(
+                        stream: ref.watch(teachersStreamProvider).whenData((data) => Stream.value(data)).value,
+                        builder: (context, teachersSnapshot) {
+                          final teachers = teachersSnapshot.data ?? [];
+                          return ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: schedules.length,
+                            itemBuilder: (context, index) {
+                              final schedule = schedules[index];
+                              return _buildScheduleCard(schedule, subjects, teachers);
+                            },
+                          );
+                        },
+                      );
                     },
                   );
                 },
@@ -158,7 +170,10 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
     );
   }
 
-  Widget _buildScheduleCard(ScheduleModel schedule) {
+  Widget _buildScheduleCard(ScheduleModel schedule, List<SubjectModel> subjects, List<TeacherModel> teachers) {
+    final subject = subjects.where((s) => s.id == schedule.subjectId).firstOrNull;
+    final teacher = teachers.where((t) => t.uid == schedule.teacherId).firstOrNull;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -167,11 +182,21 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
           child: const Icon(Icons.schedule, color: Colors.blue),
         ),
         title: Text(
-          schedule.subjectId,
+          subject?.name ?? schedule.subjectId,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          '${schedule.startTime} - ${schedule.endTime}',
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${schedule.startTime} - ${schedule.endTime}',
+            ),
+            if (teacher != null)
+              Text(
+                'المعلم: ${teacher.fullName}',
+                style: const TextStyle(color: Colors.green, fontSize: 12),
+              ),
+          ],
         ),
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
