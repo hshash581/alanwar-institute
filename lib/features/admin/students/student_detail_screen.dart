@@ -215,7 +215,7 @@ class _StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
         await FirestoreRefs.students.doc(_student.uid).update({
           'isActive': newStatus,
         });
-        await ref.read(authServiceProvider).setAccountActive(
+        await ref.read(adminRepositoryProvider).setAccountActive(
               uid: _student.uid,
               isActive: newStatus,
             );

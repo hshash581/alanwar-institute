@@ -145,7 +145,7 @@ class _ManageTeachersScreenState extends ConsumerState<ManageTeachersScreen> {
                 await FirestoreRefs.teachers.doc(teacher.uid).update({
                   'isActive': value,
                 });
-                await ref.read(authServiceProvider).setAccountActive(
+                await ref.read(adminRepositoryProvider).setAccountActive(
                       uid: teacher.uid,
                       isActive: value,
                     );
