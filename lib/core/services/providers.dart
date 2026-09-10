@@ -36,8 +36,6 @@ final currentAppUserProvider = StreamProvider<AppUser?>((ref) {
     loading: () => Stream.value(null),
     error: (_, __) => Stream.value(null),
   );
-})..handleError((error, stackTrace) {
-  return Stream.value(null);
 });
 
 final classesStreamProvider = StreamProvider<List<ClassModel>>((ref) {
