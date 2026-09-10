@@ -27,13 +27,11 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
   final _installmentController = TextEditingController();
   final _notesController = TextEditingController();
 
-  String? _selectedSemester;
   String? _selectedClassLevel;
   String? _selectedStreamId;
   List<String> _selectedSubjectIds = [];
   bool _isLoading = false;
 
-  final List<String> _semesters = ['الفصل الأول', 'الفصل الثاني'];
   final List<String> _classLevels = ['تاسع', 'بكالوريا'];
 
   @override
@@ -155,32 +153,6 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                   },
                   validator: (value) {
                     if (value == null) return 'الرجاء اختيار المستوى الدراسي';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedSemester,
-                  decoration: InputDecoration(
-                    labelText: 'الفصل الدراسي',
-                    prefixIcon: const Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  items: _semesters.map((semester) {
-                    return DropdownMenuItem(
-                      value: semester,
-                      child: Text(semester),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedSemester = value);
-                  },
-                  validator: (value) {
-                    if (value == null) return 'الرجاء اختيار الفصل الدراسي';
                     return null;
                   },
                 ),
@@ -385,7 +357,7 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         email: _emailController.text.trim(),
-        semester: _selectedSemester!,
+        semester: '',
         classLevel: _selectedClassLevel!,
         streamId: _selectedStreamId!,
         address: _addressController.text.trim(),

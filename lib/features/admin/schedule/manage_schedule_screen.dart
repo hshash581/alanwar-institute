@@ -102,62 +102,7 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
               ),
             ),
             Expanded(
-              child: StreamBuilder<List<ScheduleModel>>(
-                stream: FirestoreRefs.schedules
-                    .where('dayOfWeek', isEqualTo: _selectedDay)
-                    .snapshots()
-                    .map((snapshot) {
-                  return snapshot.docs.map((doc) {
-                    return ScheduleModel.fromMap(doc.data() as Map<String, dynamic>);
-                  }).toList();
-                }),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const LoadingView();
-                  }
-
-                  if (snapshot.hasError) {
-                    return ErrorView(
-                      message: 'خطأ في تحميل البيانات',
-                      onRetry: () => setState(() {}),
-                    );
-                  }
-
-                  var schedules = snapshot.data ?? [];
-
-                  if (_filterStreamId != null) {
-                    schedules = schedules.where((s) => s.classId == _filterStreamId).toList();
-                  }
-
-                  if (schedules.isEmpty) {
-                    return const EmptyView(
-                      message: 'لا يوجد حصص في هذا اليوم',
-                      icon: Icons.schedule,
-                    );
-                  }
-
-                  return StreamBuilder<List<SubjectModel>>(
-                    stream: ref.watch(subjectsStreamProvider).whenData((data) => Stream.value(data)).value,
-                    builder: (context, subjectsSnapshot) {
-                      final subjects = subjectsSnapshot.data ?? [];
-                      return StreamBuilder<List<TeacherModel>>(
-                        stream: ref.watch(teachersStreamProvider).whenData((data) => Stream.value(data)).value,
-                        builder: (context, teachersSnapshot) {
-                          final teachers = teachersSnapshot.data ?? [];
-                          return ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: schedules.length,
-                            itemBuilder: (context, index) {
-                              final schedule = schedules[index];
-                              return _buildScheduleCard(schedule, subjects, teachers);
-                            },
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+              child: _buildScheduleList(),
             ),
           ],
         ),
@@ -221,6 +166,56 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildScheduleList() {
+    final subjects = ref.watch(subjectsStreamProvider).valueOrNull ?? [];
+    final teachers = ref.watch(teachersStreamProvider).valueOrNull ?? [];
+
+    return StreamBuilder<List<ScheduleModel>>(
+      stream: FirestoreRefs.schedules
+          .where('dayOfWeek', isEqualTo: _selectedDay)
+          .snapshots()
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return ScheduleModel.fromMap(doc.data() as Map<String, dynamic>);
+        }).toList();
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const LoadingView();
+        }
+
+        if (snapshot.hasError) {
+          return ErrorView(
+            message: 'خطأ في تحميل البيانات',
+            onRetry: () => setState(() {}),
+          );
+        }
+
+        var schedules = snapshot.data ?? [];
+
+        if (_filterStreamId != null) {
+          schedules = schedules.where((s) => s.classId == _filterStreamId).toList();
+        }
+
+        if (schedules.isEmpty) {
+          return const EmptyView(
+            message: 'لا يوجد حصص في هذا اليوم',
+            icon: Icons.schedule,
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: schedules.length,
+          itemBuilder: (context, index) {
+            final schedule = schedules[index];
+            return _buildScheduleCard(schedule, subjects, teachers);
+          },
+        );
+      },
     );
   }
 
@@ -431,6 +426,9 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                       backgroundColor: Colors.green,
                     ),
                   );
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) Navigator.pop(context);
+                  });
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

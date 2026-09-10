@@ -354,6 +354,9 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                       backgroundColor: Colors.green,
                     ),
                   );
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) Navigator.pop(context);
+                  });
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
