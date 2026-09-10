@@ -36,14 +36,6 @@ class _StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
           ),
           backgroundColor: AppColors.primary,
           iconTheme: const IconThemeData(color: Colors.white),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
-              onPressed: () {
-                // Navigate to edit screen
-              },
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -83,9 +75,8 @@ class _StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
               ),
               const SizedBox(height: 24),
               _buildInfoCard('رقم الطالب', _student.studentNumber),
-              _buildInfoCard('المستوى الدراسي', _student.grade),
-              _buildInfoCard('الفصل', _student.classId),
-              _buildInfoCard('الفرع', _student.branch),
+              _buildInfoCard('المستوى الدراسي', _student.classLevel),
+              _buildInfoCard('الفصل الدراسي', _student.semester),
               _buildInfoCard('رقم الهاتف', _student.phone),
               _buildInfoCard('البريد الإلكتروني', _student.email),
               _buildInfoCard('العنوان', _student.address),
@@ -95,54 +86,20 @@ class _StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
               if (_student.notes.isNotEmpty)
                 _buildInfoCard('ملاحظات', _student.notes),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _toggleActiveStatus(),
-                      icon: Icon(
-                        _student.isActive ? Icons.block : Icons.check_circle,
-                        color: Colors.white,
-                      ),
-                      label: Text(
-                        _student.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _student.isActive ? Colors.red : Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showChangeEmailDialog(),
-                      icon: const Icon(Icons.email, color: Colors.white),
-                      label: const Text(
-                        'تغيير البريد',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _showChangePasswordDialog(),
-                  icon: const Icon(Icons.lock, color: Colors.white),
-                  label: const Text(
-                    'تغيير كلمة المرور',
-                    style: TextStyle(color: Colors.white),
+                  onPressed: () => _toggleActiveStatus(),
+                  icon: Icon(
+                    _student.isActive ? Icons.block : Icons.check_circle,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    _student.isActive ? 'تعطيل الحساب' : 'تنشيط الحساب',
+                    style: const TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: _student.isActive ? Colors.red : Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -241,168 +198,5 @@ class _StudentDetailScreenState extends ConsumerState<StudentDetailScreen> {
         }
       }
     }
-  }
-
-  void _showChangeEmailDialog() {
-    final newEmailController = TextEditingController(text: _student.email);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تغيير البريد الإلكتروني'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('البريد الإلكتروني الحالي:'),
-            Text(
-              _student.email,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: newEmailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'البريد الإلكتروني الجديد',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newEmail = newEmailController.text.trim();
-              if (newEmail.isEmpty || !newEmail.contains('@')) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('البريد الإلكتروني غير صالح'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                await FirestoreRefs.students.doc(_student.uid).update({
-                  'email': newEmail,
-                });
-                await FirestoreRefs.users.doc(_student.uid).update({
-                  'email': newEmail,
-                });
-                setState(() {
-                  _student = _student.copyWith(email: newEmail);
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('تم تحديث البريد الإلكتروني بنجاح'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('خطأ: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('حفظ'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showChangePasswordDialog() {
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تغيير كلمة المرور'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: newPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'كلمة المرور الجديدة',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: confirmPasswordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'تأكيد كلمة المرور',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newPassword = newPasswordController.text;
-              final confirmPassword = confirmPasswordController.text;
-
-              if (newPassword.length < 6) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              if (newPassword != confirmPassword) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('كلمتا المرور غير متطابقتين'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                await ref.read(authServiceProvider).resetPasswordForAdmin(
-                      uid: _student.uid,
-                      newPassword: newPassword,
-                    );
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('تم إرسال رابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('خطأ: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            },
-            child: const Text('حفظ'),
-          ),
-        ],
-      ),
-    );
   }
 }

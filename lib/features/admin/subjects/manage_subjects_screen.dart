@@ -15,6 +15,8 @@ class ManageSubjectsScreen extends ConsumerStatefulWidget {
 }
 
 class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
+  String? _filterClassLevel;
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -28,38 +30,87 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
           backgroundColor: AppColors.primary,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
-        body: StreamBuilder<List<SubjectModel>>(
-          stream: ref.watch(subjectsStreamProvider).whenData((data) => Stream.value(data)).value,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const LoadingView();
-            }
-
-            if (snapshot.hasError) {
-              return ErrorView(
-                message: 'خطأ في تحميل البيانات',
-                onRetry: () => setState(() {}),
-              );
-            }
-
-            final subjects = snapshot.data ?? [];
-
-            if (subjects.isEmpty) {
-              return const EmptyView(
-                message: 'لا يوجد مواد',
-                icon: Icons.book,
-              );
-            }
-
-            return ListView.builder(
+        body: Column(
+          children: [
+            Padding(
               padding: const EdgeInsets.all(16),
-              itemCount: subjects.length,
-              itemBuilder: (context, index) {
-                final subject = subjects[index];
-                return _buildSubjectCard(subject);
-              },
-            );
-          },
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilterChip(
+                      label: const Text('الكل'),
+                      selected: _filterClassLevel == null,
+                      onSelected: (selected) {
+                        setState(() => _filterClassLevel = null);
+                      },
+                      selectedColor: AppColors.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilterChip(
+                      label: const Text('تاسع'),
+                      selected: _filterClassLevel == 'تاسع',
+                      onSelected: (selected) {
+                        setState(() => _filterClassLevel = selected ? 'تاسع' : null);
+                      },
+                      selectedColor: AppColors.primary.withOpacity(0.2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilterChip(
+                      label: const Text('بكالوريا'),
+                      selected: _filterClassLevel == 'بكالوريا',
+                      onSelected: (selected) {
+                        setState(() => _filterClassLevel = selected ? 'بكالوريا' : null);
+                      },
+                      selectedColor: AppColors.primary.withOpacity(0.2),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<List<SubjectModel>>(
+                stream: ref.watch(subjectsStreamProvider).whenData((data) => Stream.value(data)).value,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LoadingView();
+                  }
+
+                  if (snapshot.hasError) {
+                    return ErrorView(
+                      message: 'خطأ في تحميل البيانات',
+                      onRetry: () => setState(() {}),
+                    );
+                  }
+
+                  var subjects = snapshot.data ?? [];
+
+                  if (_filterClassLevel != null) {
+                    subjects = subjects.where((s) => s.classLevel == _filterClassLevel).toList();
+                  }
+
+                  if (subjects.isEmpty) {
+                    return const EmptyView(
+                      message: 'لا يوجد مواد',
+                      icon: Icons.book,
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: subjects.length,
+                    itemBuilder: (context, index) {
+                      final subject = subjects[index];
+                      return _buildSubjectCard(subject);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddEditDialog(),
@@ -82,12 +133,26 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
           subject.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          subject.teacherId.isNotEmpty ? 'معلم محدد' : 'بدون معلم',
-          style: TextStyle(
-            color: subject.teacherId.isNotEmpty ? Colors.green : Colors.red,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              subject.classLevel.isNotEmpty ? 'المستوى: ${subject.classLevel}' : 'بدون مستوى',
+              style: TextStyle(
+                color: subject.classLevel.isNotEmpty ? Colors.blue : Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              subject.teacherId.isNotEmpty ? 'معلم محدد' : 'بدون معلم',
+              style: TextStyle(
+                color: subject.teacherId.isNotEmpty ? Colors.green : Colors.red,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ),
+        isThreeLine: true,
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
             const PopupMenuItem(
@@ -117,10 +182,9 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
   void _showAddEditDialog({SubjectModel? subject}) {
     final nameController = TextEditingController(text: subject?.name ?? '');
     String? selectedTeacherId = subject?.teacherId;
-    List<String> selectedClassIds = List<String>.from(subject?.classIds ?? []);
+    String? selectedClassLevel = subject?.classLevel;
 
     final teachersAsync = ref.read(teachersStreamProvider);
-    final classesAsync = ref.read(classesStreamProvider);
 
     showDialog(
       context: context,
@@ -137,6 +201,21 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                     labelText: 'اسم المادة',
                     border: OutlineInputBorder(),
                   ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedClassLevel,
+                  decoration: const InputDecoration(
+                    labelText: 'المستوى الدراسي',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'تاسع', child: Text('تاسع')),
+                    DropdownMenuItem(value: 'بكالوريا', child: Text('بكالوريا')),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() => selectedClassLevel = value);
+                  },
                 ),
                 const SizedBox(height: 16),
                 teachersAsync.when(
@@ -168,46 +247,6 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                   loading: () => const LoadingView(),
                   error: (_, __) => const Text('خطأ في تحميل المعلمين'),
                 ),
-                const SizedBox(height: 16),
-                classesAsync.when(
-                  data: (classes) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'الفصول المرتبطة',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: classes.map((cls) {
-                            final isSelected = selectedClassIds.contains(cls.id);
-                            return FilterChip(
-                              label: Text(cls.name),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setDialogState(() {
-                                  if (selected) {
-                                    selectedClassIds.add(cls.id);
-                                  } else {
-                                    selectedClassIds.remove(cls.id);
-                                  }
-                                });
-                              },
-                              selectedColor: AppColors.primary.withOpacity(0.2),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    );
-                  },
-                  loading: () => const LoadingView(),
-                  error: (_, __) => const Text('خطأ في تحميل الفصول'),
-                ),
               ],
             ),
           ),
@@ -235,13 +274,13 @@ class _ManageSubjectsScreenState extends ConsumerState<ManageSubjectsScreen> {
                       'id': docRef.id,
                       'name': nameController.text.trim(),
                       'teacherId': selectedTeacherId ?? '',
-                      'classIds': selectedClassIds,
+                      'classLevel': selectedClassLevel ?? '',
                     });
                   } else {
                     await FirestoreRefs.subjects.doc(subject.id).update({
                       'name': nameController.text.trim(),
                       'teacherId': selectedTeacherId ?? '',
-                      'classIds': selectedClassIds,
+                      'classLevel': selectedClassLevel ?? '',
                     });
                   }
                   Navigator.pop(context);

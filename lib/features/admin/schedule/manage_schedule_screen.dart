@@ -16,6 +16,7 @@ class ManageScheduleScreen extends ConsumerStatefulWidget {
 
 class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
   String _selectedDay = 'السبت';
+  String? _filterStreamId;
 
   final List<String> _days = [
     'السبت',
@@ -28,6 +29,8 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final streamsAsync = ref.watch(streamsStreamProvider);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -41,6 +44,37 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
         ),
         body: Column(
           children: [
+            streamsAsync.when(
+              data: (streams) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DropdownButtonFormField<String>(
+                    value: _filterStreamId,
+                    decoration: const InputDecoration(
+                      labelText: 'تصفية حسب الشعب/البرنامج',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('الكل'),
+                      ),
+                      ...streams.map((stream) {
+                        return DropdownMenuItem(
+                          value: stream.id,
+                          child: Text('${stream.name} (${stream.classLevel})'),
+                        );
+                      }),
+                    ],
+                    onChanged: (value) {
+                      setState(() => _filterStreamId = value);
+                    },
+                  ),
+                );
+              },
+              loading: () => const SizedBox(),
+              error: (_, __) => const SizedBox(),
+            ),
             SizedBox(
               height: 60,
               child: ListView.builder(
@@ -89,7 +123,11 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                     );
                   }
 
-                  final schedules = snapshot.data ?? [];
+                  var schedules = snapshot.data ?? [];
+
+                  if (_filterStreamId != null) {
+                    schedules = schedules.where((s) => s.classId == _filterStreamId).toList();
+                  }
 
                   if (schedules.isEmpty) {
                     return const EmptyView(
@@ -129,13 +167,12 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
           child: const Icon(Icons.schedule, color: Colors.blue),
         ),
         title: Text(
-          schedule.subjectName,
+          schedule.subjectId,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
-          '${schedule.startTime} - ${schedule.endTime}\n${schedule.teacherName} | ${schedule.room}',
+          '${schedule.startTime} - ${schedule.endTime}',
         ),
-        isThreeLine: true,
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
             const PopupMenuItem(
@@ -164,16 +201,14 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
 
   void _showAddEditDialog({ScheduleModel? schedule}) {
     String selectedDay = schedule?.dayOfWeek ?? _selectedDay;
-    String? selectedClassId = schedule?.classId;
+    String? selectedStreamId = schedule?.classId;
     String? selectedSubjectId = schedule?.subjectId;
     String? selectedTeacherId = schedule?.teacherId;
-    String subjectName = schedule?.subjectName ?? '';
-    String teacherName = schedule?.teacherName ?? '';
     final roomController = TextEditingController(text: schedule?.room ?? '');
     final startTimeController = TextEditingController(text: schedule?.startTime ?? '');
     final endTimeController = TextEditingController(text: schedule?.endTime ?? '');
 
-    final classesAsync = ref.read(classesStreamProvider);
+    final streamsAsync = ref.read(streamsStreamProvider);
     final subjectsAsync = ref.read(subjectsStreamProvider);
     final teachersAsync = ref.read(teachersStreamProvider);
 
@@ -203,27 +238,25 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                classesAsync.when(
-                  data: (classes) {
+                streamsAsync.when(
+                  data: (streams) {
                     return DropdownButtonFormField<String>(
-                      value: selectedClassId,
+                      value: selectedStreamId,
                       decoration: const InputDecoration(
-                        labelText: 'الفصل',
+                        labelText: 'الشعب/البرنامج',
                         border: OutlineInputBorder(),
                       ),
-                      items: classes.map((cls) {
+                      items: streams.map((stream) {
                         return DropdownMenuItem(
-                          value: cls.id,
-                          child: Text(cls.name),
+                          value: stream.id,
+                          child: Text('${stream.name} (${stream.classLevel})'),
                         );
                       }).toList(),
                       onChanged: (value) {
                         setDialogState(() {
-                          selectedClassId = value;
+                          selectedStreamId = value;
                           selectedSubjectId = null;
                           selectedTeacherId = null;
-                          subjectName = '';
-                          teacherName = '';
                         });
                       },
                     );
@@ -234,17 +267,13 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                 const SizedBox(height: 16),
                 subjectsAsync.when(
                   data: (subjects) {
-                    final filteredSubjects = selectedClassId != null
-                        ? subjects.where((s) => s.classIds.contains(selectedClassId)).toList()
-                        : subjects;
-
                     return DropdownButtonFormField<String>(
                       value: selectedSubjectId,
                       decoration: const InputDecoration(
                         labelText: 'المادة',
                         border: OutlineInputBorder(),
                       ),
-                      items: filteredSubjects.map((subject) {
+                      items: subjects.map((subject) {
                         return DropdownMenuItem(
                           value: subject.id,
                           child: Text(subject.name),
@@ -253,24 +282,12 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                       onChanged: (value) {
                         setDialogState(() {
                           selectedSubjectId = value;
-                          final selectedSubject = filteredSubjects.firstWhere(
+                          final selectedSubject = subjects.firstWhere(
                             (s) => s.id == value,
-                            orElse: () => filteredSubjects.first,
+                            orElse: () => subjects.first,
                           );
-                          subjectName = selectedSubject.name;
                           if (selectedSubject.teacherId.isNotEmpty) {
                             selectedTeacherId = selectedSubject.teacherId;
-                            final teacher = teachersAsync.valueOrNull?.firstWhere(
-                              (t) => t.uid == selectedSubject.teacherId,
-                              orElse: () => TeacherModel(
-                                uid: '',
-                                fullName: '',
-                                teacherNumber: '',
-                                phone: '',
-                                email: '',
-                              ),
-                            );
-                            teacherName = teacher?.fullName ?? '';
                           }
                         });
                       },
@@ -302,20 +319,7 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                         }),
                       ],
                       onChanged: (value) {
-                        setDialogState(() {
-                          selectedTeacherId = value;
-                          final teacher = activeTeachers.firstWhere(
-                            (t) => t.uid == value,
-                            orElse: () => TeacherModel(
-                              uid: '',
-                              fullName: '',
-                              teacherNumber: '',
-                              phone: '',
-                              email: '',
-                            ),
-                          );
-                          teacherName = teacher.fullName;
-                        });
+                        setDialogState(() => selectedTeacherId = value);
                       },
                     );
                   },
@@ -358,7 +362,7 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
             ),
             TextButton(
               onPressed: () async {
-                if (selectedClassId == null ||
+                if (selectedStreamId == null ||
                     selectedSubjectId == null ||
                     startTimeController.text.isEmpty ||
                     endTimeController.text.isEmpty) {
@@ -380,10 +384,8 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                       'startTime': startTimeController.text.trim(),
                       'endTime': endTimeController.text.trim(),
                       'subjectId': selectedSubjectId!,
-                      'subjectName': subjectName,
                       'teacherId': selectedTeacherId ?? '',
-                      'teacherName': teacherName,
-                      'classId': selectedClassId!,
+                      'classId': selectedStreamId!,
                       'room': roomController.text.trim(),
                     });
                   } else {
@@ -392,10 +394,8 @@ class _ManageScheduleScreenState extends ConsumerState<ManageScheduleScreen> {
                       'startTime': startTimeController.text.trim(),
                       'endTime': endTimeController.text.trim(),
                       'subjectId': selectedSubjectId!,
-                      'subjectName': subjectName,
                       'teacherId': selectedTeacherId ?? '',
-                      'teacherName': teacherName,
-                      'classId': selectedClassId!,
+                      'classId': selectedStreamId!,
                       'room': roomController.text.trim(),
                     });
                   }

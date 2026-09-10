@@ -52,6 +52,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /streams/{streamId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     match /classes/{classId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();

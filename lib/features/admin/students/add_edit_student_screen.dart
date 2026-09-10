@@ -26,25 +26,14 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
   final _installmentController = TextEditingController();
   final _notesController = TextEditingController();
 
-  String? _selectedGrade;
-  String? _selectedClassId;
-  String? _selectedBranch;
+  String? _selectedSemester;
+  String? _selectedClassLevel;
+  String? _selectedStreamId;
   List<String> _selectedSubjectIds = [];
   bool _isLoading = false;
 
-  final List<String> _grades = [
-    'الأولى',
-    'الثانية',
-    'الثالثة',
-    'الرابعة',
-    'الخامسة',
-    'السادسة',
-  ];
-
-  final List<String> _branches = [
-    'الفرع الرئيسي',
-    'الفرع الثاني',
-  ];
+  final List<String> _semesters = ['الفصل الأول', 'الفصل الثاني'];
+  final List<String> _classLevels = ['تاسع', 'بكالوريا'];
 
   @override
   void dispose() {
@@ -61,7 +50,7 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final classesAsync = ref.watch(classesStreamProvider);
+    final streamsAsync = ref.watch(streamsStreamProvider);
     final subjectsAsync = ref.watch(subjectsStreamProvider);
 
     return Directionality(
@@ -124,24 +113,26 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedGrade,
+                  value: _selectedClassLevel,
                   decoration: InputDecoration(
                     labelText: 'المستوى الدراسي',
                     prefixIcon: const Icon(Icons.school),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
                   ),
-                  items: _grades.map((grade) {
+                  items: _classLevels.map((level) {
                     return DropdownMenuItem(
-                      value: grade,
-                      child: Text(grade),
+                      value: level,
+                      child: Text(level),
                     );
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _selectedGrade = value;
-                      _selectedClassId = null;
+                      _selectedClassLevel = value;
+                      _selectedStreamId = null;
                       _selectedSubjectIds = [];
                     });
                   },
@@ -151,73 +142,75 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                classesAsync.when(
-                  data: (classes) {
-                    final filteredClasses = _selectedGrade != null
-                        ? classes.where((c) => c.grade == _selectedGrade).toList()
-                        : classes;
+                DropdownButtonFormField<String>(
+                  value: _selectedSemester,
+                  decoration: InputDecoration(
+                    labelText: 'الفصل الدراسي',
+                    prefixIcon: const Icon(Icons.calendar_today),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  items: _semesters.map((semester) {
+                    return DropdownMenuItem(
+                      value: semester,
+                      child: Text(semester),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedSemester = value);
+                  },
+                  validator: (value) {
+                    if (value == null) return 'الرجاء اختيار الفصل الدراسي';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                streamsAsync.when(
+                  data: (streams) {
+                    final filteredStreams = _selectedClassLevel != null
+                        ? streams.where((s) => s.classLevel == _selectedClassLevel).toList()
+                        : streams;
 
                     return DropdownButtonFormField<String>(
-                      value: _selectedClassId,
+                      value: _selectedStreamId,
                       decoration: InputDecoration(
-                        labelText: 'الفصل الدراسي',
-                        prefixIcon: const Icon(Icons.class_),
+                        labelText: 'الشعب/البرنامج',
+                        prefixIcon: const Icon(Icons.account_tree),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
                       ),
-                      items: filteredClasses.map((cls) {
+                      items: filteredStreams.map((stream) {
                         return DropdownMenuItem(
-                          value: cls.id,
-                          child: Text(cls.name),
+                          value: stream.id,
+                          child: Text(stream.name),
                         );
                       }).toList(),
                       onChanged: (value) {
                         setState(() {
-                          _selectedClassId = value;
+                          _selectedStreamId = value;
                           _selectedSubjectIds = [];
                         });
                       },
                       validator: (value) {
-                        if (value == null) return 'الرجاء اختيار الفصل';
+                        if (value == null) return 'الرجاء اختيار الشعب/البرنامج';
                         return null;
                       },
                     );
                   },
                   loading: () => const LoadingView(),
-                  error: (_, __) => const Text('خطأ في تحميل الفصول'),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedBranch,
-                  decoration: InputDecoration(
-                    labelText: 'الفرع',
-                    prefixIcon: const Icon(Icons.location_on),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  items: _branches.map((branch) {
-                    return DropdownMenuItem(
-                      value: branch,
-                      child: Text(branch),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedBranch = value);
-                  },
-                  validator: (value) {
-                    if (value == null) return 'الرجاء اختيار الفرع';
-                    return null;
-                  },
+                  error: (_, __) => const Text('خطأ في تحميل الشعب'),
                 ),
                 const SizedBox(height: 16),
                 subjectsAsync.when(
                   data: (subjects) {
-                    final filteredSubjects = _selectedClassId != null
-                        ? subjects
-                            .where((s) => s.classIds.contains(_selectedClassId))
-                            .toList()
+                    final filteredSubjects = _selectedClassLevel != null
+                        ? subjects.where((s) => s.classLevel == _selectedClassLevel).toList()
                         : subjects;
 
                     return Column(
@@ -231,27 +224,33 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: filteredSubjects.map((subject) {
-                            final isSelected = _selectedSubjectIds.contains(subject.id);
-                            return FilterChip(
-                              label: Text(subject.name),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedSubjectIds.add(subject.id);
-                                  } else {
-                                    _selectedSubjectIds.remove(subject.id);
-                                  }
-                                });
-                              },
-                              selectedColor: AppColors.primary.withOpacity(0.2),
-                            );
-                          }).toList(),
-                        ),
+                        if (filteredSubjects.isEmpty)
+                          const Text(
+                            'لا توجد مواد لهذا المستوى',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: filteredSubjects.map((subject) {
+                              final isSelected = _selectedSubjectIds.contains(subject.id);
+                              return FilterChip(
+                                label: Text(subject.name),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedSubjectIds.add(subject.id);
+                                    } else {
+                                      _selectedSubjectIds.remove(subject.id);
+                                    }
+                                  });
+                                },
+                                selectedColor: AppColors.primary.withOpacity(0.2),
+                              );
+                            }).toList(),
+                          ),
                       ],
                     );
                   },
@@ -369,9 +368,9 @@ class _AddEditStudentScreenState extends ConsumerState<AddEditStudentScreen> {
         fullName: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         email: _emailController.text.trim(),
-        grade: _selectedGrade!,
-        classId: _selectedClassId!,
-        branch: _selectedBranch!,
+        semester: _selectedSemester!,
+        classLevel: _selectedClassLevel!,
+        streamId: _selectedStreamId!,
         address: _addressController.text.trim(),
         guardianName: _guardianNameController.text.trim(),
         guardianPhone: _guardianPhoneController.text.trim(),

@@ -75,6 +75,14 @@ final classesStreamProvider = StreamProvider<List<ClassModel>>((ref) {
   });
 });
 
+final streamsStreamProvider = StreamProvider<List<StreamModel>>((ref) {
+  return FirestoreRefs.streams.snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) {
+      return StreamModel.fromMap(doc.data() as Map<String, dynamic>);
+    }).toList();
+  });
+});
+
 final subjectsStreamProvider = StreamProvider<List<SubjectModel>>((ref) {
   return FirestoreRefs.subjects.snapshots().map((snapshot) {
     return snapshot.docs.map((doc) {

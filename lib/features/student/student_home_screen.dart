@@ -119,7 +119,7 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> {
                 Expanded(
                   child: StatCard(
                     icon: Icons.school,
-                    value: student.grade,
+                    value: student.classLevel,
                     title: 'المستوى',
                     iconColor: Colors.blue,
                   ),
@@ -127,8 +127,8 @@ class _StudentHomeScreenState extends ConsumerState<StudentHomeScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: StatCard(
-                    icon: Icons.class_,
-                    value: student.classId,
+                    icon: Icons.calendar_today,
+                    value: student.semester,
                     title: 'الفصل',
                     iconColor: Colors.green,
                   ),

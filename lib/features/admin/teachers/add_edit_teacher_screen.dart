@@ -4,6 +4,7 @@ import 'package:alanwar_institute/core/services/providers.dart';
 import 'package:alanwar_institute/core/services/firebase_refs.dart';
 import 'package:alanwar_institute/core/constants/app_colors.dart';
 import 'package:alanwar_institute/models/teacher_model.dart';
+import 'package:alanwar_institute/core/widgets/state_widgets.dart';
 
 class AddEditTeacherScreen extends ConsumerStatefulWidget {
   final TeacherModel? teacher;
@@ -20,7 +21,11 @@ class _AddEditTeacherScreenState extends ConsumerState<AddEditTeacherScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _notesController = TextEditingController();
+  List<String> _selectedSubjectIds = [];
+  List<String> _selectedClassLevels = [];
   bool _isLoading = false;
+
+  final List<String> _classLevels = ['تاسع', 'بكالوريا'];
 
   @override
   void initState() {
@@ -30,6 +35,8 @@ class _AddEditTeacherScreenState extends ConsumerState<AddEditTeacherScreen> {
       _phoneController.text = widget.teacher!.phone;
       _emailController.text = widget.teacher!.email;
       _notesController.text = widget.teacher!.notes;
+      _selectedSubjectIds = List<String>.from(widget.teacher!.subjectIds);
+      _selectedClassLevels = List<String>.from(widget.teacher!.classLevels);
     }
   }
 
@@ -44,6 +51,8 @@ class _AddEditTeacherScreenState extends ConsumerState<AddEditTeacherScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final subjectsAsync = ref.watch(subjectsStreamProvider);
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -101,6 +110,92 @@ class _AddEditTeacherScreenState extends ConsumerState<AddEditTeacherScreen> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'المستوى الدراسي',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _classLevels.map((level) {
+                        final isSelected = _selectedClassLevels.contains(level);
+                        return FilterChip(
+                          label: Text(level),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedClassLevels.add(level);
+                              } else {
+                                _selectedClassLevels.remove(level);
+                              }
+                            });
+                          },
+                          selectedColor: AppColors.primary.withOpacity(0.2),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                subjectsAsync.when(
+                  data: (subjects) {
+                    final filteredSubjects = _selectedClassLevels.isNotEmpty
+                        ? subjects.where((s) => _selectedClassLevels.contains(s.classLevel)).toList()
+                        : subjects;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'المواد الدراسية',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (filteredSubjects.isEmpty)
+                          const Text(
+                            'لا توجد مواد لهذا المستوى',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: filteredSubjects.map((subject) {
+                              final isSelected = _selectedSubjectIds.contains(subject.id);
+                              return FilterChip(
+                                label: Text(subject.name),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedSubjectIds.add(subject.id);
+                                    } else {
+                                      _selectedSubjectIds.remove(subject.id);
+                                    }
+                                  });
+                                },
+                                selectedColor: AppColors.primary.withOpacity(0.2),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    );
+                  },
+                  loading: () => const LoadingView(),
+                  error: (_, __) => const Text('خطأ في تحميل المواد'),
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
@@ -189,16 +284,29 @@ class _AddEditTeacherScreenState extends ConsumerState<AddEditTeacherScreen> {
           'phone': _phoneController.text.trim(),
           'email': _emailController.text.trim(),
           'notes': _notesController.text.trim(),
+          'subjectIds': _selectedSubjectIds,
+          'classLevels': _selectedClassLevels,
         });
         await FirestoreRefs.users.doc(widget.teacher!.uid).update({
           'displayName': _nameController.text.trim(),
           'email': _emailController.text.trim(),
         });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم التحديث بنجاح'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context);
+        }
       } else {
         final credentials = await adminRepo.createTeacher(
           fullName: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
           email: _emailController.text.trim(),
+          subjectIds: _selectedSubjectIds,
+          classLevels: _selectedClassLevels,
           notes: _notesController.text.trim(),
           createdBy: currentUser.uid,
         );

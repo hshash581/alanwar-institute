@@ -8,6 +8,7 @@ class FirestoreRefs {
   static CollectionReference get students => _db.collection('students');
   static CollectionReference get teachers => _db.collection('teachers');
   static CollectionReference get classes => _db.collection('classes');
+  static CollectionReference get streams => _db.collection('streams');
   static CollectionReference get subjects => _db.collection('subjects');
   static CollectionReference get schedules => _db.collection('schedules');
   static CollectionReference get attendance => _db.collection('attendance');

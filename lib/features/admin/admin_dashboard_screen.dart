@@ -92,42 +92,55 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'مرحباً بك في نظام إدارة المعهد',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'معهد الأنوار',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           const Text(
-            'مرحباً بك في نظام إدارة المعهد',
+            'إحصائيات سريعة',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirestoreRefs.students.where('isActive', isEqualTo: true).snapshots(),
-            builder: (context, snapshot) {
-              final count = snapshot.data?.docs.length ?? 0;
-              return StatCard(
-                icon: Icons.people,
-                value: '$count',
-                title: 'الطلاب النشطين',
-                iconColor: Colors.blue,
-              );
-            },
-          ),
           const SizedBox(height: 12),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirestoreRefs.teachers.where('isActive', isEqualTo: true).snapshots(),
-            builder: (context, snapshot) {
-              final count = snapshot.data?.docs.length ?? 0;
-              return StatCard(
-                icon: Icons.person_outline,
-                value: '$count',
-                title: 'المعلمون النشطون',
-                iconColor: Colors.green,
-              );
-            },
-          ),
-          const SizedBox(height: 16),
+          _buildStatsGrid(),
+          const SizedBox(height: 20),
           const Text(
-            'الإدارة',
+            'الإدارة السريعة',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -135,9 +148,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           ),
           const SizedBox(height: 8),
           QuickActionTile(
-            icon: Icons.school,
-            title: 'إدارة الفصول',
-            subtitle: 'إضافة وتعديل الفصول الدراسية',
+            icon: Icons.account_tree,
+            title: 'إدارة الشعب والبرامج',
+            subtitle: 'شعب البكالوريا وبرامج التاسع',
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ManageClassesScreen()),
@@ -186,6 +199,117 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ManageAnnouncementsScreen()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirestoreRefs.students.where('isActive', isEqualTo: true).snapshots(),
+      builder: (context, studentsSnapshot) {
+        final studentCount = studentsSnapshot.data?.docs.length ?? 0;
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirestoreRefs.teachers.where('isActive', isEqualTo: true).snapshots(),
+          builder: (context, teachersSnapshot) {
+            final teacherCount = teachersSnapshot.data?.docs.length ?? 0;
+
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirestoreRefs.subjects.snapshots(),
+              builder: (context, subjectsSnapshot) {
+                final subjectCount = subjectsSnapshot.data?.docs.length ?? 0;
+
+                return StreamBuilder<QuerySnapshot>(
+                  stream: FirestoreRefs.streams.snapshots(),
+                  builder: (context, streamsSnapshot) {
+                    final streamCount = streamsSnapshot.data?.docs.length ?? 0;
+
+                    return GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 1.5,
+                      children: [
+                        _buildStatItem(
+                          icon: Icons.people,
+                          value: '$studentCount',
+                          title: 'الطلاب',
+                          color: Colors.blue,
+                        ),
+                        _buildStatItem(
+                          icon: Icons.person_outline,
+                          value: '$teacherCount',
+                          title: 'المعلمون',
+                          color: Colors.green,
+                        ),
+                        _buildStatItem(
+                          icon: Icons.book,
+                          value: '$subjectCount',
+                          title: 'المواد',
+                          color: Colors.orange,
+                        ),
+                        _buildStatItem(
+                          icon: Icons.account_tree,
+                          value: '$streamCount',
+                          title: 'الشعب',
+                          color: Colors.purple,
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String title,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 28, color: color),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
             ),
           ),
         ],

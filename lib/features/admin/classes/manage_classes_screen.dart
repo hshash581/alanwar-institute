@@ -21,14 +21,14 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
-            'إدارة الفصول',
+            'إدارة الشعب والبرامج',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: AppColors.primary,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
-        body: StreamBuilder<List<ClassModel>>(
-          stream: ref.watch(classesStreamProvider).whenData((data) => Stream.value(data)).value,
+        body: StreamBuilder<List<StreamModel>>(
+          stream: ref.watch(streamsStreamProvider).whenData((data) => Stream.value(data)).value,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const LoadingView();
@@ -41,22 +41,62 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
               );
             }
 
-            final classes = snapshot.data ?? [];
+            final streams = snapshot.data ?? [];
 
-            if (classes.isEmpty) {
+            if (streams.isEmpty) {
               return const EmptyView(
-                message: 'لا يوجد فصول',
-                icon: Icons.class_,
+                message: 'لا يوجد شعب أو برامج',
+                icon: Icons.account_tree,
               );
             }
 
-            return ListView.builder(
+            final baccalaureateStreams = streams.where((s) => s.classLevel == 'بكالوريا').toList();
+            final ninthStreams = streams.where((s) => s.classLevel == 'تاسع').toList();
+
+            return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              itemCount: classes.length,
-              itemBuilder: (context, index) {
-                final cls = classes[index];
-                return _buildClassCard(cls);
-              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (baccalaureateStreams.isNotEmpty) ...[
+                    const Text(
+                      'شعب البكالوريا',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...baccalaureateStreams.map((stream) => _buildStreamCard(stream)),
+                    const SizedBox(height: 16),
+                  ],
+                  if (ninthStreams.isNotEmpty) ...[
+                    const Text(
+                      'برامج الصف التاسع',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...ninthStreams.map((stream) => _buildStreamCard(stream)),
+                  ],
+                  if (streams.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Text(
+                          'لا يوجد شعب أو برامج بعد\nاضغط + لإضافة شعبة جديدة',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         ),
@@ -69,19 +109,31 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
     );
   }
 
-  Widget _buildClassCard(ClassModel cls) {
+  Widget _buildStreamCard(StreamModel stream) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withOpacity(0.1),
-          child: Icon(Icons.class_, color: AppColors.primary),
+          backgroundColor: stream.classLevel == 'بكالوريا'
+              ? Colors.blue.withOpacity(0.1)
+              : Colors.green.withOpacity(0.1),
+          child: Icon(
+            stream.classLevel == 'بكالорيا' ? Icons.school : Icons.child_care,
+            color: stream.classLevel == 'بكالوريا' ? Colors.blue : Colors.green,
+          ),
         ),
         title: Text(
-          cls.name,
+          stream.name,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text('${cls.grade} - ${cls.branch}'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('المستوى: ${stream.classLevel}'),
+            Text('النوع: ${stream.type}'),
+          ],
+        ),
+        isThreeLine: true,
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
             const PopupMenuItem(
@@ -98,9 +150,9 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
           ],
           onSelected: (value) {
             if (value == 'edit') {
-              _showAddEditDialog(cls: cls);
+              _showAddEditDialog(stream: stream);
             } else if (value == 'delete') {
-              _deleteClass(cls);
+              _deleteStream(stream);
             }
           },
         ),
@@ -108,63 +160,69 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
     );
   }
 
-  void _showAddEditDialog({ClassModel? cls}) {
-    final nameController = TextEditingController(text: cls?.name ?? '');
-    String? selectedGrade = cls?.grade;
-    String? selectedBranch = cls?.branch;
+  void _showAddEditDialog({StreamModel? stream}) {
+    final nameController = TextEditingController(text: stream?.name ?? '');
+    String? selectedClassLevel = stream?.classLevel;
+    String? selectedType = stream?.type;
 
-    final grades = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'السادسة'];
-    final branches = ['الفرع الرئيسي', 'الفرع الثاني'];
+    final List<String> types = stream?.classLevel == 'بكالوريا'
+        ? ['علمي', 'أدبي']
+        : ['برنامج', 'شعبة'];
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(cls == null ? 'إضافة فصل جديد' : 'تعديل الفصل'),
+          title: Text(stream == null ? 'إضافة شعبة جديدة' : 'تعديل الشعبة'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
                 decoration: const InputDecoration(
-                  labelText: 'اسم الفصل',
+                  labelText: 'اسم الشعبة/البرنامج',
                   border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedGrade,
+                value: selectedClassLevel,
                 decoration: const InputDecoration(
                   labelText: 'المستوى الدراسي',
                   border: OutlineInputBorder(),
                 ),
-                items: grades.map((grade) {
-                  return DropdownMenuItem(
-                    value: grade,
-                    child: Text(grade),
-                  );
-                }).toList(),
+                items: const [
+                  DropdownMenuItem(value: 'بكالوريا', child: Text('بكالوريا')),
+                  DropdownMenuItem(value: 'تاسع', child: Text('تاسع')),
+                ],
                 onChanged: (value) {
-                  setDialogState(() => selectedGrade = value);
+                  setDialogState(() {
+                    selectedClassLevel = value;
+                    selectedType = null;
+                  });
                 },
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedBranch,
-                decoration: const InputDecoration(
-                  labelText: 'الفرع',
-                  border: OutlineInputBorder(),
+              if (selectedClassLevel != null)
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'النوع',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: (selectedClassLevel == 'بكالوريا'
+                          ? ['علمي', 'أدبي']
+                          : ['برنامج', 'شعبة'])
+                      .map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() => selectedType = value);
+                  },
                 ),
-                items: branches.map((branch) {
-                  return DropdownMenuItem(
-                    value: branch,
-                    child: Text(branch),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setDialogState(() => selectedBranch = value);
-                },
-              ),
             ],
           ),
           actions: [
@@ -175,8 +233,8 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
             TextButton(
               onPressed: () async {
                 if (nameController.text.isEmpty ||
-                    selectedGrade == null ||
-                    selectedBranch == null) {
+                    selectedClassLevel == null ||
+                    selectedType == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('يرجى ملء جميع الحقول'),
@@ -187,26 +245,26 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
                 }
 
                 try {
-                  if (cls == null) {
-                    final docRef = FirestoreRefs.classes.doc();
+                  if (stream == null) {
+                    final docRef = FirestoreRefs.streams.doc();
                     await docRef.set({
                       'id': docRef.id,
                       'name': nameController.text.trim(),
-                      'grade': selectedGrade!,
-                      'branch': selectedBranch!,
+                      'classLevel': selectedClassLevel!,
+                      'type': selectedType!,
                       'createdAt': DateTime.now(),
                     });
                   } else {
-                    await FirestoreRefs.classes.doc(cls.id).update({
+                    await FirestoreRefs.streams.doc(stream.id).update({
                       'name': nameController.text.trim(),
-                      'grade': selectedGrade!,
-                      'branch': selectedBranch!,
+                      'classLevel': selectedClassLevel!,
+                      'type': selectedType!,
                     });
                   }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(cls == null ? 'تمت الإضافة بنجاح' : 'تم التحديث بنجاح'),
+                      content: Text(stream == null ? 'تمت الإضافة بنجاح' : 'تم التحديث بنجاح'),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -227,12 +285,12 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
     );
   }
 
-  void _deleteClass(ClassModel cls) {
+  void _deleteStream(StreamModel stream) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف الفصل "${cls.name}"؟\nهذا الإجراء لا يمكن التراجع عنه.'),
+        content: Text('هل أنت متأكد من حذف الشعبة "${stream.name}"؟\nهذا الإجراء لا يمكن التراجع عنه.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -241,7 +299,7 @@ class _ManageClassesScreenState extends ConsumerState<ManageClassesScreen> {
           TextButton(
             onPressed: () async {
               try {
-                await FirestoreRefs.classes.doc(cls.id).delete();
+                await FirestoreRefs.streams.doc(stream.id).delete();
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

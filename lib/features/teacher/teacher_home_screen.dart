@@ -108,7 +108,7 @@ class _TeacherHomeScreenState extends ConsumerState<TeacherHomeScreen> {
                   child: const Icon(Icons.schedule, color: Colors.blue),
                 ),
                 title: Text(
-                  schedule.subjectName,
+                  schedule.subjectId,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(

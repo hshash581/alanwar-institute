@@ -17,6 +17,7 @@ class ManageStudentsScreen extends ConsumerStatefulWidget {
 
 class _ManageStudentsScreenState extends ConsumerState<ManageStudentsScreen> {
   String _searchQuery = '';
+  String? _filterClassLevel;
 
   @override
   Widget build(BuildContext context) {
@@ -25,19 +26,60 @@ class _ManageStudentsScreenState extends ConsumerState<ManageStudentsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'بحث عن طالب...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'بحث عن طالب...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  onChanged: (value) {
+                    setState(() => _searchQuery = value);
+                  },
                 ),
-                filled: true,
-                fillColor: Colors.grey[50],
-              ),
-              onChanged: (value) {
-                setState(() => _searchQuery = value);
-              },
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilterChip(
+                        label: const Text('الكل'),
+                        selected: _filterClassLevel == null,
+                        onSelected: (selected) {
+                          setState(() => _filterClassLevel = null);
+                        },
+                        selectedColor: AppColors.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilterChip(
+                        label: const Text('تاسع'),
+                        selected: _filterClassLevel == 'تاسع',
+                        onSelected: (selected) {
+                          setState(() => _filterClassLevel = selected ? 'تاسع' : null);
+                        },
+                        selectedColor: AppColors.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilterChip(
+                        label: const Text('بكالوريا'),
+                        selected: _filterClassLevel == 'بكالوريا',
+                        onSelected: (selected) {
+                          setState(() => _filterClassLevel = selected ? 'بكالوريا' : null);
+                        },
+                        selectedColor: AppColors.primary.withOpacity(0.2),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -55,7 +97,12 @@ class _ManageStudentsScreenState extends ConsumerState<ManageStudentsScreen> {
                   );
                 }
 
-                final students = snapshot.data ?? [];
+                var students = snapshot.data ?? [];
+
+                if (_filterClassLevel != null) {
+                  students = students.where((s) => s.classLevel == _filterClassLevel).toList();
+                }
+
                 final filteredStudents = students.where((student) {
                   final query = _searchQuery.toLowerCase();
                   return student.fullName.toLowerCase().contains(query) ||
@@ -111,7 +158,17 @@ class _ManageStudentsScreenState extends ConsumerState<ManageStudentsScreen> {
           student.fullName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(student.studentNumber),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(student.studentNumber),
+            Text(
+              '${student.classLevel} - ${student.semester}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+        isThreeLine: true,
         trailing: Switch(
           value: student.isActive,
           onChanged: (value) async {

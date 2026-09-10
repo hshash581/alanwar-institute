@@ -7,7 +7,7 @@ class TeacherModel {
   final String phone;
   final String email;
   final List<String> subjectIds;
-  final List<String> classIds;
+  final List<String> classLevels;
   final String? photoUrl;
   final String notes;
   final bool isActive;
@@ -20,7 +20,7 @@ class TeacherModel {
     required this.phone,
     required this.email,
     this.subjectIds = const [],
-    this.classIds = const [],
+    this.classLevels = const [],
     this.photoUrl,
     this.notes = '',
     this.isActive = true,
@@ -35,7 +35,7 @@ class TeacherModel {
       phone: map['phone'] ?? '',
       email: map['email'] ?? '',
       subjectIds: List<String>.from(map['subjectIds'] ?? []),
-      classIds: List<String>.from(map['classIds'] ?? []),
+      classLevels: List<String>.from(map['classLevels'] ?? []),
       photoUrl: map['photoUrl'],
       notes: map['notes'] ?? '',
       isActive: map['isActive'] ?? true,
@@ -51,7 +51,7 @@ class TeacherModel {
       'phone': phone,
       'email': email,
       'subjectIds': subjectIds,
-      'classIds': classIds,
+      'classLevels': classLevels,
       'photoUrl': photoUrl,
       'notes': notes,
       'isActive': isActive,
@@ -66,7 +66,7 @@ class TeacherModel {
     String? phone,
     String? email,
     List<String>? subjectIds,
-    List<String>? classIds,
+    List<String>? classLevels,
     String? photoUrl,
     String? notes,
     bool? isActive,
@@ -79,7 +79,7 @@ class TeacherModel {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       subjectIds: subjectIds ?? this.subjectIds,
-      classIds: classIds ?? this.classIds,
+      classLevels: classLevels ?? this.classLevels,
       photoUrl: photoUrl ?? this.photoUrl,
       notes: notes ?? this.notes,
       isActive: isActive ?? this.isActive,

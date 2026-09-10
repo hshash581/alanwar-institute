@@ -3,15 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ClassModel {
   final String id;
   final String name;
-  final String grade;
-  final String branch;
+  final String streamId;
+  final String classLevel;
   final DateTime? createdAt;
 
   ClassModel({
     required this.id,
     required this.name,
-    required this.grade,
-    required this.branch,
+    required this.streamId,
+    required this.classLevel,
     this.createdAt,
   });
 
@@ -19,8 +19,8 @@ class ClassModel {
     return ClassModel(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      grade: map['grade'] ?? '',
-      branch: map['branch'] ?? '',
+      streamId: map['streamId'] ?? '',
+      classLevel: map['classLevel'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -29,8 +29,8 @@ class ClassModel {
     return {
       'id': id,
       'name': name,
-      'grade': grade,
-      'branch': branch,
+      'streamId': streamId,
+      'classLevel': classLevel,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
     };
   }
@@ -38,15 +38,67 @@ class ClassModel {
   ClassModel copyWith({
     String? id,
     String? name,
-    String? grade,
-    String? branch,
+    String? streamId,
+    String? classLevel,
     DateTime? createdAt,
   }) {
     return ClassModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      grade: grade ?? this.grade,
-      branch: branch ?? this.branch,
+      streamId: streamId ?? this.streamId,
+      classLevel: classLevel ?? this.classLevel,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}
+
+class StreamModel {
+  final String id;
+  final String name;
+  final String type;
+  final String classLevel;
+  final DateTime? createdAt;
+
+  StreamModel({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.classLevel,
+    this.createdAt,
+  });
+
+  factory StreamModel.fromMap(Map<String, dynamic> map) {
+    return StreamModel(
+      id: map['id'] ?? '',
+      name: map['name'] ?? '',
+      type: map['type'] ?? '',
+      classLevel: map['classLevel'] ?? '',
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'type': type,
+      'classLevel': classLevel,
+      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+    };
+  }
+
+  StreamModel copyWith({
+    String? id,
+    String? name,
+    String? type,
+    String? classLevel,
+    DateTime? createdAt,
+  }) {
+    return StreamModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      classLevel: classLevel ?? this.classLevel,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -56,13 +108,13 @@ class SubjectModel {
   final String id;
   final String name;
   final String teacherId;
-  final List<String> classIds;
+  final String classLevel;
 
   SubjectModel({
     required this.id,
     required this.name,
     this.teacherId = '',
-    this.classIds = const [],
+    this.classLevel = '',
   });
 
   factory SubjectModel.fromMap(Map<String, dynamic> map) {
@@ -70,7 +122,7 @@ class SubjectModel {
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       teacherId: map['teacherId'] ?? '',
-      classIds: List<String>.from(map['classIds'] ?? []),
+      classLevel: map['classLevel'] ?? '',
     );
   }
 
@@ -79,7 +131,7 @@ class SubjectModel {
       'id': id,
       'name': name,
       'teacherId': teacherId,
-      'classIds': classIds,
+      'classLevel': classLevel,
     };
   }
 
@@ -87,95 +139,61 @@ class SubjectModel {
     String? id,
     String? name,
     String? teacherId,
-    List<String>? classIds,
+    String? classLevel,
   }) {
     return SubjectModel(
       id: id ?? this.id,
       name: name ?? this.name,
       teacherId: teacherId ?? this.teacherId,
-      classIds: classIds ?? this.classIds,
+      classLevel: classLevel ?? this.classLevel,
     );
   }
 }
 
 class ScheduleModel {
   final String id;
+  final String classId;
+  final String subjectId;
+  final String teacherId;
   final String dayOfWeek;
   final String startTime;
   final String endTime;
-  final String subjectId;
-  final String subjectName;
-  final String teacherId;
-  final String teacherName;
-  final String classId;
-  final String room;
+  final String? room;
 
   ScheduleModel({
     required this.id,
+    required this.classId,
+    required this.subjectId,
+    required this.teacherId,
     required this.dayOfWeek,
     required this.startTime,
     required this.endTime,
-    required this.subjectId,
-    required this.subjectName,
-    required this.teacherId,
-    required this.teacherName,
-    required this.classId,
-    this.room = '',
+    this.room,
   });
 
   factory ScheduleModel.fromMap(Map<String, dynamic> map) {
     return ScheduleModel(
       id: map['id'] ?? '',
+      classId: map['classId'] ?? '',
+      subjectId: map['subjectId'] ?? '',
+      teacherId: map['teacherId'] ?? '',
       dayOfWeek: map['dayOfWeek'] ?? '',
       startTime: map['startTime'] ?? '',
       endTime: map['endTime'] ?? '',
-      subjectId: map['subjectId'] ?? '',
-      subjectName: map['subjectName'] ?? '',
-      teacherId: map['teacherId'] ?? '',
-      teacherName: map['teacherName'] ?? '',
-      classId: map['classId'] ?? '',
-      room: map['room'] ?? '',
+      room: map['room'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
+      'classId': classId,
+      'subjectId': subjectId,
+      'teacherId': teacherId,
       'dayOfWeek': dayOfWeek,
       'startTime': startTime,
       'endTime': endTime,
-      'subjectId': subjectId,
-      'subjectName': subjectName,
-      'teacherId': teacherId,
-      'teacherName': teacherName,
-      'classId': classId,
       'room': room,
     };
-  }
-
-  ScheduleModel copyWith({
-    String? id,
-    String? dayOfWeek,
-    String? startTime,
-    String? endTime,
-    String? subjectId,
-    String? subjectName,
-    String? teacherId,
-    String? teacherName,
-    String? classId,
-    String? room,
-  }) {
-    return ScheduleModel(
-      id: id ?? this.id,
-      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
-      startTime: startTime ?? this.startTime,
-      endTime: endTime ?? this.endTime,
-      subjectId: subjectId ?? this.subjectId,
-      subjectName: subjectName ?? this.subjectName,
-      teacherId: teacherId ?? this.teacherId,
-      teacherName: teacherName ?? this.teacherName,
-      classId: classId ?? this.classId,
-      room: room ?? this.room,
-    );
   }
 }

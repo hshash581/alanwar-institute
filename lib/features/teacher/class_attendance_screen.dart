@@ -55,7 +55,7 @@ class _ClassAttendanceScreenState extends ConsumerState<ClassAttendanceScreen> {
             }
 
             final students = (snapshot.data ?? [])
-                .where((s) => s.classId == widget.classId && s.isActive)
+                .where((s) => s.streamId == widget.classId && s.isActive)
                 .toList();
 
             if (students.isEmpty) {

@@ -24,7 +24,7 @@ class ScheduleScreen extends StatelessWidget {
         ),
         body: StreamBuilder<List<ScheduleModel>>(
           stream: FirestoreRefs.schedules
-              .where('classId', isEqualTo: student.classId)
+              .where('classId', isEqualTo: student.streamId)
               .snapshots()
               .map((snapshot) {
             return snapshot.docs.map((doc) {
@@ -89,13 +89,12 @@ class ScheduleScreen extends StatelessWidget {
                             child: const Icon(Icons.schedule, color: Colors.blue),
                           ),
                           title: Text(
-                            schedule.subjectName,
+                            schedule.subjectId,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
-                            '${schedule.startTime} - ${schedule.endTime}\n${schedule.teacherName} | ${schedule.room}',
+                            '${schedule.startTime} - ${schedule.endTime}',
                           ),
-                          isThreeLine: true,
                         ),
                       );
                     }),

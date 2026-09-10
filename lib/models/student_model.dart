@@ -6,9 +6,9 @@ class StudentModel {
   final String studentNumber;
   final String phone;
   final String email;
-  final String grade;
-  final String classId;
-  final String branch;
+  final String semester;
+  final String classLevel;
+  final String streamId;
   final DateTime? birthDate;
   final String address;
   final String guardianName;
@@ -26,9 +26,9 @@ class StudentModel {
     required this.studentNumber,
     required this.phone,
     required this.email,
-    required this.grade,
-    required this.classId,
-    required this.branch,
+    required this.semester,
+    required this.classLevel,
+    required this.streamId,
     this.birthDate,
     this.address = '',
     this.guardianName = '',
@@ -48,9 +48,9 @@ class StudentModel {
       studentNumber: map['studentNumber'] ?? '',
       phone: map['phone'] ?? '',
       email: map['email'] ?? '',
-      grade: map['grade'] ?? '',
-      classId: map['classId'] ?? '',
-      branch: map['branch'] ?? '',
+      semester: map['semester'] ?? '',
+      classLevel: map['classLevel'] ?? '',
+      streamId: map['streamId'] ?? '',
       birthDate: (map['birthDate'] as Timestamp?)?.toDate(),
       address: map['address'] ?? '',
       guardianName: map['guardianName'] ?? '',
@@ -71,9 +71,9 @@ class StudentModel {
       'studentNumber': studentNumber,
       'phone': phone,
       'email': email,
-      'grade': grade,
-      'classId': classId,
-      'branch': branch,
+      'semester': semester,
+      'classLevel': classLevel,
+      'streamId': streamId,
       'birthDate': birthDate != null ? Timestamp.fromDate(birthDate!) : null,
       'address': address,
       'guardianName': guardianName,
@@ -93,9 +93,9 @@ class StudentModel {
     String? studentNumber,
     String? phone,
     String? email,
-    String? grade,
-    String? classId,
-    String? branch,
+    String? semester,
+    String? classLevel,
+    String? streamId,
     DateTime? birthDate,
     String? address,
     String? guardianName,
@@ -113,9 +113,9 @@ class StudentModel {
       studentNumber: studentNumber ?? this.studentNumber,
       phone: phone ?? this.phone,
       email: email ?? this.email,
-      grade: grade ?? this.grade,
-      classId: classId ?? this.classId,
-      branch: branch ?? this.branch,
+      semester: semester ?? this.semester,
+      classLevel: classLevel ?? this.classLevel,
+      streamId: streamId ?? this.streamId,
       birthDate: birthDate ?? this.birthDate,
       address: address ?? this.address,
       guardianName: guardianName ?? this.guardianName,
