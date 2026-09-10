@@ -1,165 +1,105 @@
-# مع الأنوار - نظام إدارة المعهد
+# معهد الأنوار - Al-Anwar Institute
 
-نظام إلكتروني شامل لإدارة المعهد التعليمي، يوفر إدارة الطلاب والمعلمين والمناهج والدفعات والتقارير.
+تطبيق إدارة معهد تعليمي بالكامل مبني بـ Flutter + Firebase.
 
-## الميزات الرئيسية
-
-### للإدارة
-- إدارة حسابات الطلاب والمعلمين
-- إنشاء حسابات مديرين آخرين
-- إدارة الفصول والمادة والجدول
-- نظام الدفعات والأقساط
-- التقارير المالية والإدارية
-- نشر الإعلانات
-
-### للمعلمين
-- عرض الحصص اليومية
+## الميزات
+- لوحة تحكم المدير مع إحصائيات حية
+- إدارة الطلاب (إضافة/تعديل/حذف/تفعيل/تعطيل)
+- إدارة المدرسين (إضافة/تعديل/حذف/تفعيل/تعطيل)
+- إدارة الشعب والمواد والجدول
+- ربط الشعبة بالمادة والمدرس والقاعة
+- نظام أقساط كامل (الكلي/المدفوع/المتبقي/الحالة)
 - تسجيل الحضور والغياب
-- عرض الإعلانات
+- الإعلانات والواجبات
+- تقارير الأقساط
+- لوحة تحكم الطالب
+- لوحة تحكم المدرس
+- رسائل تحذيرية لكل إجراء خطير
 
-### للطلاب
-- عرض الجدول الدراسي
-- متابعة الحضور والغياب
-- متابعة الدفعات
-- عرض المواد والواجبات
-- عرض الإعلانات
+##How to Setup
 
-## التقنيات
-
-- **Flutter**: إطار عمل متعدد المنصات
-- **Firebase**: Backend as a Service
-  - Authentication
-  - Cloud Firestore
-  - Cloud Storage
-- **Riverpod**: إدارة الحالة
-- **Firestore Security Rules**: أمان قاعدة البيانات
-
-## المتطلبات
-
-- Flutter SDK 3.24.0+
-- Dart SDK 3.5.0+
-- Firebase Account
-- Android Studio / VS Code
-
-## التثبيت
-
-1. استنساخ المستودع:
+### 1. تثبيت Flutter
 ```bash
-git clone https://github.com/username/alanwar_institute.git
-cd alanwar_institute
+# Windows
+# حمّل Flutter SDK من: https://docs.flutter.dev/get-started/install/windows
+
+# تحقق من التثبيت
+flutter doctor
 ```
 
-2. تثبيت التبعيات:
+### 2. إعداد Firebase
+```bash
+# تثبيت Firebase CLI
+npm install -g firebase-tools
+
+# تسجيل الدخول
+firebase login
+
+# تثبيت flutterfire CLI
+dart pub global activate flutterfire_cli
+
+# إعداد Firebase للمشروع
+flutterfire configure
+```
+
+### 3. إنشاء حساب المدير
+1. افتح Firebase Console: https://console.firebase.google.com
+2. اختر مشروع **al-anwar-institute**
+3. **Authentication** ← **Users** ← **Add user**
+4. أضف مستخدم:
+   - Email: `admin@alanwar.edu`
+   - Password: `Admin@123456`
+5. اذهب إلى **Firestore Database** ← **Start collection**
+6. أنشئ مجموعة `users` مع document جديد:
+   - Document ID: (same as Firebase Auth UID)
+   - Fields:
+     - `uid`: (same as Firebase Auth UID)
+     - `displayName`: `مدير المعهد`
+     - `email`: `admin@alanwar.edu`
+     - `username`: `admin`
+     - `role`: `admin`
+     - `isActive`: `true`
+     - `createdAt`: (current timestamp)
+
+### 4. تشغيل التطبيق
 ```bash
 flutter pub get
-```
-
-3. إعداد Firebase:
-   - إنشاء مشروع Firebase
-   - تحميل ملف `google-services.json`
-   - وضعه في `android/app/`
-
-4. تشغيل التطبيق:
-```bash
 flutter run
 ```
 
-## بناء التطبيق
-
-### Android APK:
+### 5. بناء APK
 ```bash
 flutter build apk --release
 ```
 
-### Web:
+### 6. بناء Web
 ```bash
-flutter build web --release
+flutter build web --release --base-href="/"
 ```
 
-## هيكل المشروع
+## Firebase Collections
 
-```
-lib/
-├── core/
-│   ├── constants/
-│   │   ├── app_colors.dart
-│   │   └── app_strings.dart
-│   ├── routing/
-│   │   ├── auth_gate.dart
-│   │   └── role_scaffold.dart
-│   ├── services/
-│   │   ├── admin_repository.dart
-│   │   ├── auth_service.dart
-│   │   ├── firebase_refs.dart
-│   │   └── providers.dart
-│   ├── theme/
-│   │   └── app_theme.dart
-│   └── widgets/
-│       ├── common_cards.dart
-│       └── state_widgets.dart
-├── features/
-│   ├── admin/
-│   │   ├── admin_dashboard_screen.dart
-│   │   ├── announcements/
-│   │   ├── classes/
-│   │   ├── payments/
-│   │   ├── reports/
-│   │   ├── schedule/
-│   │   ├── students/
-│   │   ├── subjects/
-│   │   └── teachers/
-│   ├── auth/
-│   │   └── login_screen.dart
-│   ├── student/
-│   │   ├── student_home_screen.dart
-│   │   ├── schedule_screen.dart
-│   │   ├── attendance_screen.dart
-│   │   ├── payments_screen.dart
-│   │   ├── subjects_screen.dart
-│   │   ├── assignments_screen.dart
-│   │   ├── announcements_screen.dart
-│   │   └── profile_screen.dart
-│   └── teacher/
-│       ├── teacher_home_screen.dart
-│       └── class_attendance_screen.dart
-├── models/
-│   ├── user_model.dart
-│   ├── student_model.dart
-│   ├── teacher_model.dart
-│   ├── records_model.dart
-│   └── class_subject_schedule_model.dart
-├── firebase_options.dart
-└── main.dart
-```
+| Collection | الوصف |
+|---|---|
+| `users` | حسابات المستخدمين (مدير/مدرس/طالب) |
+| `students` | بيانات الطلاب |
+| `teachers` | بيانات المدرسين |
+| `classes` | الشعب (مرتبطة بالصف والفرع) |
+| `subjects` | المواد (مرتبطة بالمدرس والفصول) |
+| `schedules` | الجدول (مرتبط بالشعبة والمدرس والقاعة) |
+| `attendance` | سجل الحضور والغياب |
+| `payments` | الأقساط والمدفوعات |
+| `assignments` | الواجبات |
+| `announcements` | الإعلانات |
+| `counters` | عداد لتوليد الأرقام التسلسلية |
 
-## الأمان
+## هيكل الأرقام التسلسلية
+- الطلاب: `STU-1001`, `STU-1002`, ...
+- المدرسين: `TCH-1001`, `TCH-1002`, ...
 
-- Firebase Security Rules لحماية قاعدة البيانات
-- التحقق من هوية المستخدم قبل الوصول للبيانات
-- التحقق من صلاحيات المستخدم (مدير/معلم/طالب)
-- تعطيل الحسابات غير النشطة
-
-## النشر
-
-### Android:
-```bash
-flutter build apk --release
-# APK سيكون في: build/app/outputs/flutter-apk/app-release.apk
-```
-
-### Web:
-```bash
-flutter build web --release
-# الملفات ستكون في: build/web/
-```
-
-### GitHub Pages:
-يتم النشر تلقائياً عبر GitHub Actions عند الدفع إلى branch main.
-
-## المسؤولية
-
-هذا النظام مسؤول عن إدارة البيانات التعليمية والمالية للمعهد. يرجى التأكد من صحة البيانات قبل الحفظ.
-
-## الترخيص
-
-© 2024 مع الأنوار. جميع الحقوق محفوظة.
+## بيانات الدخول الافتراضية
+| الحقل | القيمة |
+|---|---|
+| اسم المستخدم | `admin` |
+| البريد الإلكتروني | `admin@alanwar.edu` |
+| كلمة المرور | `Admin@123456` |
