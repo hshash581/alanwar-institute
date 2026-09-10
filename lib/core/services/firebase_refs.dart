@@ -4,6 +4,7 @@ class FirestoreRefs {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static CollectionReference get users => _db.collection('users');
+  static CollectionReference get usernames => _db.collection('usernames');
   static CollectionReference get students => _db.collection('students');
   static CollectionReference get teachers => _db.collection('teachers');
   static CollectionReference get classes => _db.collection('classes');

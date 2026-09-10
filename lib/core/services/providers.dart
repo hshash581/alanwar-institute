@@ -28,12 +28,16 @@ final currentAppUserProvider = StreamProvider<AppUser?>((ref) {
       if (user == null) return Stream.value(null);
       return FirestoreRefs.users.doc(user.uid).snapshots().map((doc) {
         if (!doc.exists) return null;
-        return AppUser.fromMap(doc.data() as Map<String, dynamic>);
+        final data = doc.data();
+        if (data == null) return null;
+        return AppUser.fromMap(data as Map<String, dynamic>);
       });
     },
     loading: () => Stream.value(null),
     error: (_, __) => Stream.value(null),
   );
+})..handleError((error, stackTrace) {
+  return Stream.value(null);
 });
 
 final classesStreamProvider = StreamProvider<List<ClassModel>>((ref) {

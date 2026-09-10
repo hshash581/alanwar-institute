@@ -6,46 +6,47 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    
-    function isAdmin() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'admin';
-    }
-    
-    function isTeacher() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'teacher';
-    }
-    
-    function isStudent() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'student';
-    }
-    
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    function isActive() {
-      return isAuthenticated() && (!exists(/databases/$(database)/documents/users/$(request.auth.uid)) || getUserData().isActive == true);
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isTeacher() {
+      return isAuthenticated() && getUserRole() == 'teacher';
+    }
+    
+    function isStudent() {
+      return isAuthenticated() && getUserRole() == 'student';
     }
 
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isAdmin() || isOwner(userId));
+      allow read: if isOwner(userId);
       allow create: if true;
-      allow update: if isAdmin() || isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /students/{studentId} {
-      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isStudent() || isOwner(studentId));
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isOwner(studentId));
       allow create: if isAdmin();
       allow update: if isAdmin() || isOwner(studentId);
       allow delete: if isAdmin();
     }
 
     match /teachers/{teacherId} {
-      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isStudent() || isOwner(teacherId));
+      allow read: if isAuthenticated() && (isAdmin() || isTeacher() || isOwner(teacherId));
       allow create: if isAdmin();
       allow update: if isAdmin() || isOwner(teacherId);
       allow delete: if isAdmin();
